@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            Canvas test
+        </title>
+    </head>
+    <body>
+        Move the mouse over the rectangle below
+        <div id="container">
+            <canvas id="number" width=400 height="300">
+                <p>
+                Not supported
+                </p>
+            </canvas>
+        </div>
+        
+        <script type="text/javascript" src="getnumber.js"></script>
+    </body>
+</html>
