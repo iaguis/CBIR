@@ -2,6 +2,9 @@
  
 import numpy as np
 import sys
+import scipy.optimize as sp
+
+from fmincg import fmincg
  
 def read_training_examples(file_X, file_y):
     X = np.genfromtxt(file_X, delimiter=" ")
@@ -26,6 +29,8 @@ def rand_initialize_weights(L_in, L_out):
     epsilon_init = 0.12
     
     W = np.random.rand(L_out, 1+L_in) * 2 * epsilon_init - epsilon_init
+    
+    return W
 
 def nn_cost_function(nn_params, input_layer_size, hidden_layer_size, num_labels, X, y, lambd):
     theta_size = hidden_layer_size*(input_layer_size+1)
@@ -71,7 +76,6 @@ def nn_cost_function(nn_params, input_layer_size, hidden_layer_size, num_labels,
         delta_2 = np.dot(Theta2.T, delta_3) * sigmoid_gradient(np.concatenate((np.array([[1]]), z_2)))
         
         delta_2 = delta_2[1:].copy()
-        # FIXME be careful
 
         Theta2_grad = Theta2_grad + np.dot(delta_3, a_2.T)
         
@@ -97,15 +101,36 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
     try:
+        input_layer_size  = 400
+        hidden_layer_size = 25
+        num_labels = 10
+        
         X, y = read_training_examples("training_X.txt", "training_y.txt")
-        Theta1 = np.genfromtxt("Theta1.txt")
-        Theta2 = np.genfromtxt("Theta2.txt")
+        #Theta1 = np.genfromtxt("Theta1.txt")
+        #Theta2 = np.genfromtxt("Theta2.txt")
         
-        nn_params = np.concatenate((Theta1.flatten(), Theta2.flatten()))
+        initial_Theta1 = rand_initialize_weights(input_layer_size, hidden_layer_size)
+        initial_Theta2 = rand_initialize_weights(hidden_layer_size, num_labels)
         
-        J, grad = nn_cost_function(nn_params, 400, 25, 10, X, y, 1) # debug
-        print(J)
-        print(grad)
+        initial_nn_params = np.concatenate((initial_Theta1.flatten(), initial_Theta2.flatten()))
+        
+        lambd = 3
+        
+        def costFunction(p):
+            return nn_cost_function(p, input_layer_size, hidden_layer_size, num_labels, X, y, lambd)
+        
+        #sp.fmin_cg(costFunction, initial_nn_params)
+            
+        #J, grad = costFunction(initial_nn_params)
+        
+        nn_params, cost, i = fmincg(costFunction, initial_nn_params, 50)
+        print(nn_params)
+        print(cost)
+        #nn_params = np.concatenate((Theta1.flatten(), Theta2.flatten()))
+        
+        #J, grad = nn_cost_function(nn_params, 400, 25, 10, X, y, 1) # debug
+        #print(J)
+        #print(grad)
         
         
     except err:

@@ -50,6 +50,13 @@
 # 1) Python translation
 
 import numpy as np
+import sys
+import numpy.linalg as la
+
+from math import isnan, isinf
+
+def div(a, b):
+    return la.solve(b.T, a.T).T
 
 def fmincg(f, X, maxiter=100):
     length = maxiter
@@ -70,7 +77,7 @@ def fmincg(f, X, maxiter=100):
     f1, df1 = f(X)                      # get function value and gradient
     i = i + (length<0)                                            # count epochs?!
     s = -df1                                        # search direction is steepest
-    d1 = np.np.dot(-s.T, s)                                                 # this is the slope
+    d1 = np.dot(-s.T, s)                                                 # this is the slope
     z1 = red/(1-d1)                                  # initial step is red/(|s|+1)
 
     while i < abs(length):                           # while not finished
@@ -98,7 +105,7 @@ def fmincg(f, X, maxiter=100):
                 else:
                     A = 6*(f2-f3)/z3+3*(d2+d3)                                 # cubic fit
                     B = 3*(f3-f2)-np.dot(z3,(d3+2*d2))
-                    z2 = (sqrt(np.dot(B, B)-dot(dot(dot(dot(A,d2),z3),z3)))-B)/A       # numerical error possible - ok!
+                    z2 = (np.sqrt(np.dot(B, B)-np.dot(np.dot(np.dot(A,d2),z3),z3))-B)/A       # numerical error possible - ok!
                 if isnan(z2) | isinf(z2):
                     z2 = z3/2                  # if we had a numerical problem then bisect
                 z2 = max(min(z2, INT*z3),(1-INT)*z3)  # don't accept too close to limits
@@ -118,7 +125,7 @@ def fmincg(f, X, maxiter=100):
                 break                                                          # failure
             A = 6*(f2-f3)/z3+3*(d2+d3)                      # make cubic extrapolation
             B = 3*(f3-f2)-np.dot(z3, (d3+2*d2))
-            z2 = -np.dot(np.dot(d2,z3),z3)/(B+math.sqrt(np.dot(B,B)-np.dot(np.dot(np.dot(A,d2),z3),z3)))        # num. error possible - ok!
+            z2 = -np.dot(np.dot(d2,z3),z3)/(B+np.sqrt(np.dot(B,B)-np.dot(np.dot(np.dot(A,d2),z3),z3)))        # num. error possible - ok!
             if z2 is not float or isnan(z2) or isinf(z2) or z2 < 0:   # num prob or wrong sign?
                 if limit < -0.5:                               # if we have no upper limit
                     z2 = z1 * (EXT-1)                 # the extrapolate the maximum amount
@@ -141,9 +148,9 @@ def fmincg(f, X, maxiter=100):
             d2 = np.dot(df2.T,s)
         if success:                                         # if line search succeeded
             f1 = f2
-            fX = (np.concatenate(fX.T, f1) ,1).T
-            #print("%s %4i | Cost: %4.6e\r", S, i, f1)
-            s = (df2.T*df2-df1.T*df2)/(df1.T*df1)*s - df2;      # Polack-Ribiere direction
+            fX = np.concatenate((fX.T, [f1]) ,1).T
+            print("Iteration ", i, " | Cost: ", f1)
+            s = np.dot((np.dot(df2.T,df2)-np.dot(df1.T,df2))/(np.dot(df1.T,df1)), s) - df2      # Polack-Ribiere direction
             tmp = df1
             df1 = df2
             df2 = tmp                         # swap derivatives
@@ -151,7 +158,7 @@ def fmincg(f, X, maxiter=100):
             if d2 > 0:                                      # new slope must be negative
                 s = -df1                              # otherwise use steepest direction
                 d2 = np.dot(-s.T,s)
-            z1 = z1 * min(RATIO, d1/(d2-realmin))          # slope ratio but max RATIO
+            z1 = z1 * min(RATIO, d1/(d2-sys.float_info.min))          # slope ratio but max RATIO
             d1 = d2
             ls_failed = 0                              # this line search did not fail
         else:
