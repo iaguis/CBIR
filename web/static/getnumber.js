@@ -42,7 +42,7 @@ if (window.addEventListener) {
         function tool_pencil() {
             var tool = this;
             this.started = false;
-            context.lineWidth = 10.0;
+            context.lineWidth = 20.0;
             
             this.mousedown = function(ev) {
                 context.beginPath();
