@@ -8,20 +8,21 @@
         <link type="text/css" rel="stylesheet" href="static/stylesheet.css">
     </head>
     <body>
+        <div id="search">
         Draw the number you want:
-        <div id="container">
-<!--             <form id="numberform" method="post"> -->
-                <canvas id="number" width=400 height="300">
+            <div id="canvasContainer">
+                <canvas id="number" width=200 height="200">
                     <p>
                     Not supported
                     </p>
                 </canvas>
-<!--                 <input type="submit"> -->
-                
-<!--             </form> -->
+            </div>
+        <button id="searchButton">Search</button>
+        <div id="result">
         </div>
-         <button onclick="submitImage()">Submit</button>
+         </div>
         
+        <script type="text/javascript" src="static/jquery.js"></script>
         <script type="text/javascript" src="static/getnumber.js"></script>
     </body>
 </html>

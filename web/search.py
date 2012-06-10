@@ -2,26 +2,47 @@
 
 import web
 import base64
+import subprocess
+import Image
+import ImageOps
+import StringIO
+
+from recognize_number import *
     
 urls = (
     '/', 'index'
 )
 
+
 class index:
+    def __init__(self):
+        self.recognizer = Recognizer()
+    
     def GET(self):
         render = web.template.render('templates/')
         return render.canvas()
     
     def POST(self):
-        image = web.input()
+        img_base64 = web.input()
         
-        img = base64.b64decode(image.numberImg)
+        img_decoded = base64.b64decode(img_base64.numberImg)
+
+        img = Image.open(StringIO.StringIO(img_decoded))
+                
+        img = ImageOps.grayscale(img)
         
-        fh = open("number.png", "wb")
-        fh.write(img)
+        img = img.resize((20, 20), Image.ANTIALIAS)
+                
+        image_path = "number.png"
+        
+        fh = open(image_path, "wb")
+        fh.write(img_decoded)
         fh.close()
+
         
-        raise web.seeother('/')
+        subprocess.call(["convert", image_path, "-background", "white", "-flatten", "-filter", "Quadratic", "-resize", "20x20", image_path])
+
+        return self.recognizer.predict_number()
         
 
 if __name__ == "__main__":

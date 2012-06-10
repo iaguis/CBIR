@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
  
 import numpy as np
 import sys
-import scipy.optimize as sp
 import Image
 
-from numberrecognizer.fmincg import fmincg
+from fmincg import fmincg
  
 def read_training_examples(file_X, file_y):
     X = np.genfromtxt(file_X, delimiter=" ")
@@ -16,9 +15,7 @@ def sigmoid(z):
     return 1.0 / (1.0 + np.exp(-z))
     
 def sigmoid_gradient(z):
-    #print (z.shape)
     g = np.zeros(z.shape)
-    #print(g)
     
     g = sigmoid(z) * (1 - sigmoid(z))
     
@@ -49,12 +46,6 @@ def nn_cost_function(nn_params, input_layer_size, hidden_layer_size, num_labels,
     
     for i in range(m):
         y_encoded = np.zeros((num_labels,1))
-        # FIXME Change this when training the net
-        #what = y[i]
-        #if what == 0:
-            #what = 9
-        #else:
-            #what = y[i]-1
 
         y_encoded[y[i]] = [1]
         
@@ -129,13 +120,13 @@ def train(X, y):
         
     Theta1 = nn_params[:theta_size].reshape(hidden_layer_size, input_layer_size+1).copy()
     Theta2 = nn_params[theta_size:].reshape(num_labels, hidden_layer_size+1).copy()
-    if cost[len(cost)-1] < 0.8:
-        np.savetxt("Theta1.txt", Theta1)
-        np.savetxt("Theta2.txt", Theta2)
+    #if cost[len(cost)-1] < 0.8:
+    np.savetxt("Theta1.txt", Theta1)
+    np.savetxt("Theta2.txt", Theta2)
     return Theta1, Theta2
         
 def usage():
-    print("Usage: ", sys.argv[0], " train|predict")
+    print "Usage:", sys.argv[0], "train|predict"
     
 def to_float_array(a):
     a *= 2
@@ -143,18 +134,36 @@ def to_float_array(a):
     a -= 1
     return a
 
-def predict_image():
-    Theta1 = np.genfromtxt("numberrecognizer/Theta1.txt")
-    Theta2 = np.genfromtxt("numberrecognizer/Theta2.txt")
+def predict_number():
+    Theta1 = np.genfromtxt("../numberrecognizer/Theta1.txt")
+    Theta2 = np.genfromtxt("../numberrecognizer/Theta2.txt")
     
-    img = Image.open("web/number.png")
+    img = Image.open("number.png")
     img_array = np.array(img).flatten()
     to_float_array_vect = np.vectorize(to_float_array)
     img_float = to_float_array_vect(img_array)
     
     pred = predict(Theta1, Theta2, img_float[np.newaxis])
-    print(pred.item())
-    
+    return pred.item()
+
+def to255(a):
+    a = max(-1.0, min(1.0, a))
+    a = (a+1)/2
+    if a == 1.0:
+        return 255                
+    else:
+        return np.uint8(a * 256.0)
+
+def get_training_examples(X, y):    
+    for i in range(len(X)):
+        img_array = X[i].reshape((20, 20), order="F")
+        to255_vect = np.vectorize(to255)
+        img_array_255 = to255_vect(img_array)
+        img = Image.fromarray(img_array_255)
+        
+        img_path = "training/" + "example" + str(int(y[i])) + "-" + str(i) + ".png"
+        img.save(img_path, "PNG")
+        i += 1
 
 def main(argv=None):
     if argv is None:
@@ -177,9 +186,9 @@ def main(argv=None):
         
         pred = predict(Theta1, Theta2, X)
 
-        print("Training Set Accuracy ", np.mean(pred == y[np.newaxis].T))
-    except Exception:
-        print(Exception.msg, file=sys.stderr)
+        print "Training Set Accuracy", np.mean(pred == y[np.newaxis].T)
+    except Exception as e:
+        print e
         return -1
 
 if __name__ == "__main__":

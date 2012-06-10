@@ -1,87 +1,115 @@
-if (window.addEventListener) {
-    window.addEventListener('load', function () {
-        var canvas, context, tool;
-        
-        function init() {
-            canvas = document.getElementById('number');
-            if (!canvas) {
-                alert('Error: Cannot find the canvas element!');
-                return;
-            }
-            
-            if (!canvas.getContext) {
-                alert('Error: no canvas.getContext!')
-                return;
-            }
-            
-            context = canvas.getContext('2d');
-            tool = new tool_pencil();
-            
-            canvas.addEventListener('mousedown', ev_canvas, false);
-            canvas.addEventListener('mousemove', ev_canvas, false);
-            canvas.addEventListener('mouseup', ev_canvas, false);
+$(document).ready(function() {
+    
+    $("#searchButton").click(submitImage);
+    
+    var canvas, context, tool;
+    
+    function init() {
+        canvas = $("#number")[0];
+        if (!canvas) {
+            alert('Error: Cannot find the canvas element!');
+            return;
         }
         
-        var started = false;
+        if (!canvas.getContext) {
+            alert('Error: no canvas.getContext!')
+            return;
+        }
         
-        function ev_canvas(ev) {
-             if (ev.layerX || ev.layerX == 0) { // Firefox
-                ev._x = ev.layerX;
-                ev._y = ev.layerY;
-            } else if (ev.offsetX || ev.offsetX == 0) {  // Opera
-                ev._x = ev.offsetX;
-                ev._y = ev.offsetY;
-            }
+        context = canvas.getContext('2d');
+        context.fillStyle = "rgb(128, 128, 128)";
+        context.fillRect(0, 0, 200, 200);
+        tool = new tool_pencil();
+        
+        
+        canvas.addEventListener('mousedown', ev_canvas, false);
+        canvas.addEventListener('mousemove', ev_canvas, false);
+        canvas.addEventListener('mouseup', ev_canvas, false);
+    }
+    
+    var started = false;
+    
+    function relMouseCoords(event){
+        var totalOffsetX = 0;
+        var totalOffsetY = 0;
+        var canvasX = 0;
+        var canvasY = 0;
+        var currentElement = this;
+
+        do{
+            totalOffsetX += currentElement.offsetLeft;
+            totalOffsetY += currentElement.offsetTop;
+        }
+        while(currentElement = currentElement.offsetParent)
+
+        canvasX = event.pageX - totalOffsetX;
+        canvasY = event.pageY - totalOffsetY;
+
+        return {x:canvasX, y:canvasY}
+    }
+    HTMLCanvasElement.prototype.relMouseCoords = relMouseCoords;
             
-            var func = tool[ev.type];
-            if (func) {
-                func(ev);
+    function ev_canvas(ev) {
+        coords = canvas.relMouseCoords(ev);
+        
+        ev._x = coords.x;
+        ev._y = coords.y;
+        
+        var func = tool[ev.type];
+        if (func) {
+            func(ev);
+        }
+    }
+    
+    function tool_pencil() {
+        var tool = this;
+        this.started = false;
+        context.strokeStyle = "rgb(255, 255, 255)";
+        context.lineWidth = 15.0;
+        
+        this.mousedown = function(ev) {
+            context.beginPath();
+            context.moveTo(ev._x, ev._y);
+            tool.started = true;
+        }
+        
+        this.mousemove = function(ev) {
+            if (tool.started) {
+                context.lineTo(ev._x, ev._y);
+                context.stroke();
             }
         }
         
-        function tool_pencil() {
-            var tool = this;
-            this.started = false;
-            context.lineWidth = 20.0;
-            
-            this.mousedown = function(ev) {
-                context.beginPath();
-                context.moveTo(ev._x, ev._y);
-                tool.started = true;
-            }
-            
-            this.mousemove = function(ev) {
-                if (tool.started) {
-                    context.lineTo(ev._x, ev._y);
-                    context.stroke();
-                }
-            }
-            
-            this.mouseup = function(ev) {
-                if (tool.started) {
-                    tool.mousemove(ev);
-                    tool.started = false;
-                }
+        this.mouseup = function(ev) {
+            if (tool.started) {
+                tool.mousemove(ev);
+                tool.started = false;
             }
         }
+    }
+            
+    init();
+    
+    function submitImage() {
+        var canvas = $("#number")[0];
+        var dataURL = canvas.toDataURL();
+        var dataString = dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
         
-        init();
-    }, false); }
-    
-function submitImage() {
-    canvas = document.getElementById('number');
-    var dataURL = canvas.toDataURL();
-    
-    var form = document.createElement("form");
-    form.setAttribute("method", "post");
-    form.setAttribute("action", "/");
-    
-    var hiddenField = document.createElement("input");
-    hiddenField.setAttribute("type", "hidden");
-    hiddenField.setAttribute("name", "numberImg");
-    var data = dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
-    hiddenField.setAttribute("value", data);
-    
-    form.appendChild(hiddenField);
-    form.submit();
-}
+        $.ajaxSetup ({  
+        cache: false  
+        });  
+        
+        $.ajax({
+            type: "POST",
+            url: "/",
+            data: {numberImg : dataString},
+            success: function(number) {
+                $("#result").html("I think it is a " + number);
+            }
+        });
+        
+        context.fillRect(0, 0, 200, 200);
+        
+        
+    }    
+});

@@ -1,7 +1,12 @@
-#container {
+#canvasContainer {
     position: relative;
 }
 
 #number {
     border: 1px solid #000;
+}
+
+body {
+    margin:50px 0px; padding:0px;
+    text-align:center;
 }
