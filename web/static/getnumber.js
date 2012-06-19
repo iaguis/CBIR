@@ -90,6 +90,19 @@ $(document).ready(function() {
             
     init();
     
+    function showImages(urls, colSize) {
+        $("#result").html("");
+        for (i=0; i<urls.length; i++) {
+            if (i != 0 && i%colSize == 0) {
+                $("#result").append("<div id=\"row\">");
+            }
+            $("#result").append("<span><img src=\"" + urls[i] + "\" width=\"100px\"></img></span>");
+            if (i%(colSize-1) == 0) {
+                $("#result").append("</div>");
+            }
+        }
+    }
+    
     function submitImage() {
         var canvas = $("#number")[0];
         var dataURL = canvas.toDataURL();
@@ -103,13 +116,13 @@ $(document).ready(function() {
             type: "POST",
             url: "/",
             data: {numberImg : dataString},
-            success: function(number) {
-                $("#result").html("I think it is a " + number);
+            success: function(results) {
+                var colSize = 5;
+                var urls = results.split(",");
+                showImages(urls, colSize);
             }
         });
         
-        context.fillRect(0, 0, 200, 200);
-        
-        
+        context.fillRect(0, 0, 200, 200);      
     }    
 });

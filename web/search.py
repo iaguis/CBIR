@@ -6,6 +6,7 @@ import subprocess
 import Image
 import ImageOps
 import StringIO
+import os
 
 from recognize_number import *
     
@@ -29,9 +30,9 @@ class index:
 
         img = Image.open(StringIO.StringIO(img_decoded))
                 
-        img = ImageOps.grayscale(img)
+        #img = ImageOps.grayscale(img)
         
-        img = img.resize((20, 20), Image.ANTIALIAS)
+        #img = img.resize((20, 20), Image.ANTIALIAS)
                 
         image_path = "number.png"
         
@@ -41,9 +42,12 @@ class index:
 
         
         subprocess.call(["convert", image_path, "-background", "white", "-flatten", "-filter", "Quadratic", "-resize", "20x20", image_path])
-
-        return self.recognizer.predict_number()
         
+        number = self.recognizer.predict_number()
+        directory = "static/images/" + str(number) + "/"
+        
+        result_images = os.listdir(directory)
+        return ",".join(map(lambda x: directory+x, result_images))
 
 if __name__ == "__main__":
     app = web.application(urls, globals())
